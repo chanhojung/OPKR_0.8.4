@@ -122,11 +122,14 @@ static void draw_lead(UIState *s, int idx) {
   float sz = std::clamp((25 * 30) / (d_rel / 3 + 30), 15.0f, 30.0f) * s->zoom;
   x = std::clamp(x, 0.f, s->viz_rect.right() - sz / 2);
   y = std::fmin(s->viz_rect.bottom() - sz * .6, y);
+  nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
-  if (s->scene.radarDistance < 149) {
+  if (s->scene.radarDistance < 149) { // radar detection state from neokii
     draw_chevron(s, x, y, sz, nvgRGBA(201, 34, 49, fillAlpha), COLOR_YELLOW);
-  } else {
+    ui_draw_text(s, x, y + sz/1.5f, "R", 20 * 2.5, COLOR_WHITE, "sans-bold");
+  } else { // eon(Comma) detection state
     draw_chevron(s, x, y, sz, nvgRGBA(165, 255, 135, fillAlpha), COLOR_GREEN);
+    ui_draw_text(s, x, y + sz/1.5f, "C", 20 * 2.5, COLOR_BLACK, "sans-bold");    
   }
 }
 
@@ -151,6 +154,7 @@ static void ui_draw_line(UIState *s, const line_vertices_data &vd, NVGcolor *col
 //Atom(Conan)'s colored track, some codes come from Hoya
 static void ui_draw_track(UIState *s, const line_vertices_data &vd) 
 {
+  const UIScene &scene = s->scene;    
   if (vd.cnt == 0) return;
 
   nvgBeginPath(s->vg);
@@ -161,28 +165,39 @@ static void ui_draw_track(UIState *s, const line_vertices_data &vd)
   nvgClosePath(s->vg);
 
   int steerOverride = s->scene.car_state.getSteeringPressed();
+  int torque_scale = 0;
+  int red_lvl = 0;
+  int green_lvl = 0;
+  float steer_max_v = s->scene.steerMax_V - (1.5 * (s->scene.steerMax_V - 0.9));  
+
   NVGpaint track_bg;
   if (s->scene.controls_state.getEnabled()) {
     if (steerOverride) {
       track_bg = nvgLinearGradient(s->vg, s->fb_w, s->fb_h, s->fb_w, s->fb_h*.4,
         COLOR_BLACK_ALPHA(80), COLOR_BLACK_ALPHA(20));
-    } else {
-      float steer_max_v = s->scene.steerMax_V - (1.5 * (s->scene.steerMax_V - 0.9));
-      int torque_scale = (int)fabs(255*(float)s->scene.output_scale*steer_max_v);
-      int red_lvl = fmin(255, torque_scale);
-      int green_lvl = fmin(255, 255-torque_scale);
-      track_bg = nvgLinearGradient(s->vg, s->fb_w, s->fb_h, s->fb_w, s->fb_h*.4,
-        nvgRGBA(          red_lvl,            green_lvl,  0, 150),
-        nvgRGBA((int)(0.7*red_lvl), (int)(0.7*green_lvl), 0, 20));
+    } else if (!scene.lateralPlan.lanelessModeStatus) {
+        if (fabs(s->scene.output_scale) > 0.90) {
+          torque_scale = (int)fabs(255*(float)s->scene.output_scale*steer_max_v);
+          red_lvl = fmin(255, torque_scale);
+          green_lvl = fmin(255, 255-torque_scale);
+        } else{
+          red_lvl = 0;
+          green_lvl = 200;          
+        }
+        track_bg = nvgLinearGradient(s->vg, s->fb_w, s->fb_h, s->fb_w, s->fb_h*.4,
+          nvgRGBA(red_lvl, green_lvl, 0, 230), nvgRGBA(red_lvl, green_lvl, 0, 20));
+    } else { // differentiate laneless mode color (Grace blue)
+      track_bg = nvgLinearGradient(s->vg, s->fb_w, s->fb_h, s->fb_w, s->fb_h * .4,
+          nvgRGBA(0, 100, 255, 230), nvgRGBA(0, 100, 255, 30));
     }
   } else {
     // Draw white vision track
     track_bg = nvgLinearGradient(s->vg, s->fb_w, s->fb_h, s->fb_w, s->fb_h * .4,
-                                        COLOR_WHITE_ALPHA(150), COLOR_WHITE_ALPHA(20));
+                                COLOR_WHITE_ALPHA(150), COLOR_WHITE_ALPHA(20));
   }
-
+  
   nvgFillPaint(s->vg, track_bg);
-  nvgFill(s->vg); 
+  nvgFill(s->vg);  
 }
 
 static void draw_frame(UIState *s) {
@@ -380,8 +395,8 @@ static void ui_draw_debug(UIState *s)
   nvgTextAlign(s->vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 
   if (s->nDebugUi1) {
-    ui_draw_text(s, 0, 1035, scene.alertTextMsg1.c_str(), 50, COLOR_WHITE_ALPHA(125), "sans-semibold");
-    ui_draw_text(s, 0, 1078, scene.alertTextMsg2.c_str(), 50, COLOR_WHITE_ALPHA(125), "sans-semibold");
+    ui_draw_text(s, 30, 1030, scene.alertTextMsg1.c_str(), 50, COLOR_WHITE_ALPHA(200), "sans-bold");
+    ui_draw_text(s, 30, 1070, scene.alertTextMsg2.c_str(), 50, COLOR_WHITE_ALPHA(200), "sans-semibold");
   }
 
   
@@ -465,6 +480,39 @@ static void ui_draw_gear( UIState *s )
 
   nvgFillColor(s->vg, nColor);
   ui_print( s, x_pos, y_pos, str_msg );
+}
+
+static void ui_draw_vision_brake(UIState *s) {
+  const UIScene *scene = &s->scene;
+
+  const int radius = 85;
+  const int center_x = s->viz_rect.x + radius + bdr_s + radius*2 + 20;
+  const int center_y = s->viz_rect.bottom() - footer_h + ((footer_h - radius) / 2);
+
+  bool brake_valid = scene->car_state.getBrakeLights();
+  float brake_img_alpha = brake_valid ? 1.0f : 0.15f;
+  float brake_bg_alpha = brake_valid ? 0.3f : 0.1f;
+  NVGcolor brake_bg = nvgRGBA(0, 0, 0, (255 * brake_bg_alpha));
+  ui_draw_circle_image(s, center_x, center_y, radius, "brake", brake_bg, brake_img_alpha);
+}
+
+static void ui_draw_vision_autohold(UIState *s) {
+  const UIScene *scene = &s->scene;
+  int autohold = scene->car_state.getAutoHold();
+  if(autohold < 0)
+    return;
+
+  const int radius = 85;
+  const int center_x = s->viz_rect.x + radius + bdr_s + (radius*2 + 20) * 2;
+  const int center_y = s->viz_rect.bottom() - footer_h + ((footer_h - radius) / 2);
+
+  float brake_img_alpha = autohold > 0 ? 1.0f : 0.15f;
+  float brake_bg_alpha = autohold > 0 ? 0.3f : 0.1f;
+  NVGcolor brake_bg = nvgRGBA(0, 0, 0, (255 * brake_bg_alpha));
+
+  ui_draw_circle_image(s, center_x, center_y, radius,
+        autohold > 1 ? "autohold_warning" : "autohold_active",
+        brake_bg, brake_img_alpha);
 }
 
 static void ui_draw_vision_maxspeed(UIState *s) {
@@ -1182,6 +1230,13 @@ static void ui_draw_vision_footer(UIState *s) {
     ui_draw_ml_button(s);
   }
   ui_draw_vision_car(s);
+
+#if UI_FEATURE_BRAKE
+  ui_draw_vision_brake(s);
+#endif  
+#if UI_FEATURE_AUTOHOLD
+  ui_draw_vision_autohold(s);
+#endif
 }
 
 static float get_alert_alpha(float blink_rate) {
@@ -1460,6 +1515,9 @@ void ui_nvg_init(UIState *s) {
       {"car_right", "../assets/img_car_right.png"},
       {"compass", "../assets/img_compass.png"},
       {"direction", "../assets/img_direction.png"},
+	    {"brake", "../assets/img_brake_disc.png"},      
+	    {"autohold_warning", "../assets/img_autohold_warning.png"},
+	    {"autohold_active", "../assets/img_autohold_active.png"},      
   };
   for (auto [name, file] : images) {
     s->images[name] = nvgCreateImage(s->vg, file, 1);

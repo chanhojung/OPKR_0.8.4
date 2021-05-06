@@ -25,6 +25,9 @@
 #include <QObject>
 #include <QTimer>
 
+#define UI_FEATURE_BRAKE 1
+#define UI_FEATURE_AUTOHOLD 1
+
 #define COLOR_BLACK nvgRGBA(0, 0, 0, 255)
 #define COLOR_BLACK_ALPHA(x) nvgRGBA(0, 0, 0, x)
 #define COLOR_WHITE nvgRGBA(255, 255, 255, 255)
