@@ -177,10 +177,16 @@ class CarController():
     self.res_speed = 0
     self.res_speed_timer = 0
 
+    self.anglesteer_desire = 0.0
+    self.angle_range = [5, 50]
+    self.angle_steerMax_range = [int(self.params.get("SteerMaxBaseAdj")), CarControllerParams.STEER_MAX]
+    self.angle_steerDeltaUp_range = [int(self.params.get("SteerDeltaUpBaseAdj")), CarControllerParams.STEER_DELTA_UP]
+    self.angle_steerDeltaDown_range = [int(self.params.get("SteerDeltaDownBaseAdj")), CarControllerParams.STEER_DELTA_DOWN]
+
     self.model_speed_range = [30, 100, 255]
-    self.steerMax_range = [CarControllerParams.STEER_MAX, int(self.params.get("SteerMaxBaseAdj")), 255]
-    self.steerDeltaUp_range = [CarControllerParams.STEER_DELTA_UP, int(self.params.get("SteerDeltaUpBaseAdj")), 2]
-    self.steerDeltaDown_range = [CarControllerParams.STEER_DELTA_DOWN, int(self.params.get("SteerDeltaDownBaseAdj")), 3]
+    self.steerMax_range = [CarControllerParams.STEER_MAX, int(self.params.get("SteerMaxBaseAdj")), int(self.params.get("SteerMaxBaseAdj"))]
+    self.steerDeltaUp_range = [CarControllerParams.STEER_DELTA_UP, int(self.params.get("SteerDeltaUpBaseAdj")), int(self.params.get("SteerDeltaUpBaseAdj"))]
+    self.steerDeltaDown_range = [CarControllerParams.STEER_DELTA_DOWN, int(self.params.get("SteerDeltaDownBaseAdj")), int(self.params.get("SteerDeltaDownBaseAdj"))]
 
     self.steerMax = int(self.params.get("SteerMaxBaseAdj"))
     self.steerDeltaUp = int(self.params.get("SteerDeltaUpBaseAdj"))
@@ -198,6 +204,7 @@ class CarController():
 
     self.p = CarControllerParams
     #self.sm = messaging.SubMaster(['controlsState'])
+
   def update(self, enabled, CS, frame, CC, actuators, pcm_cancel_cmd, visual_alert,
              left_lane, right_lane, left_lane_depart, right_lane_depart, set_speed, lead_visible, lead_dist, lead_vrel, lead_yrel, sm):
 
@@ -234,20 +241,24 @@ class CarController():
     lateral_plan = sm['lateralPlan']
     self.outScale = lateral_plan.outputScale
     self.vCruiseSet = lateral_plan.vCruiseSet
-    
+    self.anglesteer_desire = lateral_plan.steerAngleDesireDeg       
+
     #self.model_speed = interp(abs(lateral_plan.vCurvature), [0.0002, 0.01], [255, 30])
     #Hoya
-    #self.model_speed = interp(abs(lateral_plan.vCurvature), [0.0, 0.0002, 0.00074, 0.0025, 0.008, 0.02], [255, 255, 130, 90, 60, 20])
-    self.model_speed = self.curve_speed
+    self.model_speed = interp(abs(lateral_plan.vCurvature), [0.0, 0.0002, 0.00074, 0.0025, 0.008, 0.02], [255, 255, 130, 90, 60, 20])
+    #self.model_speed = self.curve_speed
 
     if CS.out.vEgo > 8:
       if self.variable_steer_max:
-        self.steerMax = interp(int(abs(self.model_speed)), self.model_speed_range, self.steerMax_range)
+        self.steerMax = interp(int(abs(self.anglesteer_desire), self.angle_range, self.steerMax_range)
+        # self.steerMax = interp(int(abs(self.model_speed)), self.model_speed_range, self.steerMax_range)
       else:
         self.steerMax = int(self.params.get("SteerMaxBaseAdj"))
       if self.variable_steer_delta:
-        self.steerDeltaUp = interp(int(abs(self.model_speed)), self.model_speed_range, self.steerDeltaUp_range)
-        self.steerDeltaDown = interp(int(abs(self.model_speed)), self.model_speed_range, self.steerDeltaDown_range)
+        self.steerDeltaUp = interp(int(abs(self.anglesteer_desire)), self.angle_range, self.angle_steerDeltaUp_range)
+        self.steerDeltaDown = interp(int(abs(self.anglesteer_desire)), self.angle_range, self.angle_steerDeltaDown_range)
+        # self.steerDeltaUp = interp(int(abs(self.model_speed)), self.model_speed_range, self.steerDeltaUp_range)
+        # self.steerDeltaDown = interp(int(abs(self.model_speed)), self.model_speed_range, self.steerDeltaDown_range)
       else:
         self.steerDeltaUp = int(self.params.get("SteerDeltaUpBaseAdj"))
         self.steerDeltaDown = int(self.params.get("SteerDeltaDownBaseAdj"))
@@ -340,7 +351,7 @@ class CarController():
     if frame % 2 and CS.CP.mdpsBus: # send clu11 to mdps if it is not on bus 0
       can_sends.append(create_clu11(self.packer, frame, CS.clu11, Buttons.NONE, enabled_speed, CS.CP.mdpsBus))
 
-    str_log1 = 'CV={:03.0f}  TQ={:03.0f}  ST={:03.0f}/{:01.0f}/{:01.0f}  AQ={:0.2f}'.format(self.curve_speed, abs(new_steer), max(self.steerMax, abs(new_steer)), self.steerDeltaUp, self.steerDeltaDown, CS.scc12["aReqValue"])
+    str_log1 = 'M/C/V={:03.0f}/{:03.0f}/{:0.4f}  TQ={:03.0f}  ST={:03.0f}/{:01.0f}/{:01.0f}  AQ={:0.2f}'.format(self.model_speed, self.curve_speed, lateral_plan.vCurvature, abs(new_steer), max(self.steerMax, abs(new_steer)), self.steerDeltaUp, self.steerDeltaDown, CS.scc12["aReqValue"])
 
     try:
       if self.params.get_bool("OpkrLiveTune"):
