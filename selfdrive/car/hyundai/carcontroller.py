@@ -250,7 +250,7 @@ class CarController():
 
     if CS.out.vEgo > 8:
       if self.variable_steer_max:
-        self.steerMax = interp(int(abs(self.anglesteer_desire)), self.angle_range, self.steerMax_range)
+        self.steerMax = interp(int(abs(self.anglesteer_desire)), self.angle_range, self.angle_steerMax_range)
         # self.steerMax = interp(int(abs(self.model_speed)), self.model_speed_range, self.steerMax_range)
       else:
         self.steerMax = int(self.params.get("SteerMaxBaseAdj"))
