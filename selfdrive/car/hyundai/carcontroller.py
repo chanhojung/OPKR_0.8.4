@@ -149,7 +149,6 @@ class CarController():
     elif self.longcontrol:
       self.SC = SpdctrlLong()
     
-    self.model_speed = 0
     self.curve_speed = 0
 
     self.dRel = 0
@@ -182,11 +181,6 @@ class CarController():
     self.angle_steerMax_range = [int(self.params.get("SteerMaxBaseAdj")), CarControllerParams.STEER_MAX]
     self.angle_steerDeltaUp_range = [int(self.params.get("SteerDeltaUpBaseAdj")), CarControllerParams.STEER_DELTA_UP]
     self.angle_steerDeltaDown_range = [int(self.params.get("SteerDeltaDownBaseAdj")), CarControllerParams.STEER_DELTA_DOWN]
-
-    self.model_speed_range = [30, 100, 255]
-    self.steerMax_range = [CarControllerParams.STEER_MAX, int(self.params.get("SteerMaxBaseAdj")), int(self.params.get("SteerMaxBaseAdj"))]
-    self.steerDeltaUp_range = [CarControllerParams.STEER_DELTA_UP, int(self.params.get("SteerDeltaUpBaseAdj")), int(self.params.get("SteerDeltaUpBaseAdj"))]
-    self.steerDeltaDown_range = [CarControllerParams.STEER_DELTA_DOWN, int(self.params.get("SteerDeltaDownBaseAdj")), int(self.params.get("SteerDeltaDownBaseAdj"))]
 
     self.steerMax = int(self.params.get("SteerMaxBaseAdj"))
     self.steerDeltaUp = int(self.params.get("SteerDeltaUpBaseAdj"))
@@ -222,9 +216,6 @@ class CarController():
 
     param = self.p
 
-    #self.model_speed = 255 - self.SC.calc_va(sm, CS.out.vEgo)
-    #atom model_speed
-    #self.model_speed = self.SC.cal_model_speed(sm, CS.out.vEgo)
     if frame % 10 == 0:
       self.curve_speed = self.SC.cal_curve_speed(sm, CS.out.vEgo)
 
@@ -243,22 +234,14 @@ class CarController():
     self.vCruiseSet = lateral_plan.vCruiseSet
     self.anglesteer_desire = lateral_plan.steerAngleDesireDeg       
 
-    #self.model_speed = interp(abs(lateral_plan.vCurvature), [0.0002, 0.01], [255, 30])
-    #Hoya
-    self.model_speed = interp(abs(lateral_plan.vCurvature), [0.0, 0.0002, 0.00074, 0.0025, 0.008, 0.02], [255, 255, 130, 90, 60, 20])
-    #self.model_speed = self.curve_speed
-
     if CS.out.vEgo > 8:
       if self.variable_steer_max:
         self.steerMax = interp(int(abs(self.anglesteer_desire)), self.angle_range, self.angle_steerMax_range)
-        # self.steerMax = interp(int(abs(self.model_speed)), self.model_speed_range, self.steerMax_range)
       else:
         self.steerMax = int(self.params.get("SteerMaxBaseAdj"))
       if self.variable_steer_delta:
         self.steerDeltaUp = interp(int(abs(self.anglesteer_desire)), self.angle_range, self.angle_steerDeltaUp_range)
         self.steerDeltaDown = interp(int(abs(self.anglesteer_desire)), self.angle_range, self.angle_steerDeltaDown_range)
-        # self.steerDeltaUp = interp(int(abs(self.model_speed)), self.model_speed_range, self.steerDeltaUp_range)
-        # self.steerDeltaDown = interp(int(abs(self.model_speed)), self.model_speed_range, self.steerDeltaDown_range)
       else:
         self.steerDeltaUp = int(self.params.get("SteerDeltaUpBaseAdj"))
         self.steerDeltaDown = int(self.params.get("SteerDeltaDownBaseAdj"))
@@ -482,12 +465,12 @@ class CarController():
         self.v_cruise_kph_auto_res = 0
         self.res_speed = 0
 
-    if self.model_speed > 95 and self.cancel_counter == 0 and not CS.acc_active and not CS.out.brakeLights and int(CS.VSetDis) > 30 and \
+    if self.cancel_counter == 0 and not CS.acc_active and not CS.out.brakeLights and int(CS.VSetDis) > 30 and \
      (CS.lead_distance < 149 or int(CS.clu_Vanz) > 30) and int(CS.clu_Vanz) >= 3 and self.auto_res_timer <= 0 and self.opkr_cruise_auto_res:
       if self.opkr_cruise_auto_res_option == 0:
         can_sends.append(create_clu11(self.packer, frame, CS.clu11, Buttons.RES_ACCEL)) if not self.longcontrol else can_sends.append(create_clu11(self.packer, frame, CS.clu11, Buttons.RES_ACCEL, clu11_speed, CS.CP.sccBus))  # auto res
         self.res_speed = int(CS.clu_Vanz*1.1)
-        self.res_speed_timer = 100
+        self.res_speed_timer = 50
       elif self.opkr_cruise_auto_res_option == 1:
         can_sends.append(create_clu11(self.packer, frame, CS.clu11, Buttons.SET_DECEL)) if not self.longcontrol else can_sends.append(create_clu11(self.packer, frame, CS.clu11, Buttons.SET_DECEL, clu11_speed, CS.CP.sccBus)) # auto res but set_decel to set current speed
         self.v_cruise_kph_auto_res = int(CS.clu_Vanz)
