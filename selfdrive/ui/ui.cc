@@ -120,6 +120,8 @@ static void update_model(UIState *s, const cereal::ModelDataV2::Reader &model) {
     update_line_data(s, road_edges[i], 0.025, 0, &scene.road_edge_vertices[i], max_idx);
   }
 
+  scene.lateral_plan = sm["lateralPlan"].getLateralPlan();
+
   // update path
   if (scene.lead_data[0].getStatus()) {
     const float lead_d = scene.lead_data[0].getDRel() * 2.;
@@ -128,8 +130,10 @@ static void update_model(UIState *s, const cereal::ModelDataV2::Reader &model) {
   max_idx = get_path_length_idx(model_position, max_distance);
   if (scene.map_on_overlay) {
     update_line_data(s, model_position, 0.7, 1.22, &scene.track_vertices, max_idx);
-  } else {
+  } else if (!scene.lateralPlan.lanelessModeStatus) {
     update_line_data(s, model_position, 0.5, 1.22, &scene.track_vertices, max_idx);
+  } else {
+    update_line_data(s, model_position, 0.3, 1.22, &scene.track_vertices, max_idx);
   }
 }
 
