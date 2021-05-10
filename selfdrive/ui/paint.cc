@@ -613,9 +613,9 @@ static void ui_draw_vision_speed(UIState *s) {
   const std::string speed_str = std::to_string((int)std::nearbyint(speed));
   const Rect &viz_rect = s->viz_rect;
   const UIScene *scene = &s->scene;
-  const int viz_speed_w = 260;
+  const int viz_speed_w = 240;
   const int viz_speed_x = viz_rect.centerX() - viz_speed_w/2;
-  const int header_h2 = 400;
+  const int header_h2 = 360;
 
   // turning blinker from kegman, moving signal by OPKR
   if(scene->leftBlinker && !s->scene.comma_stock_ui) {
@@ -624,23 +624,23 @@ static void ui_draw_vision_speed(UIState *s) {
     nvgLineTo(s->vg, viz_speed_x - viz_speed_w/2, viz_rect.y + header_h2/4 + header_h2/4);
     nvgLineTo(s->vg, viz_speed_x, viz_rect.y + header_h2/2 + header_h2/4);
     nvgClosePath(s->vg);
-    nvgFillColor(s->vg, nvgRGBA(255,230,70,(scene->blinker_blinkingrate<=120 && scene->blinker_blinkingrate>=50)?70:0));
+    nvgFillColor(s->vg, nvgRGBA(255,190,0,(scene->blinker_blinkingrate<=70 && scene->blinker_blinkingrate>=25)?70:0));
     nvgFill(s->vg);
 
     nvgBeginPath(s->vg);
-    nvgMoveTo(s->vg, viz_speed_x-145, viz_rect.y + header_h2/4);
-    nvgLineTo(s->vg, viz_speed_x-145 - viz_speed_w/2, viz_rect.y + header_h2/4 + header_h2/4);
-    nvgLineTo(s->vg, viz_speed_x-145, viz_rect.y + header_h2/2 + header_h2/4);
+    nvgMoveTo(s->vg, viz_speed_x-135, viz_rect.y + header_h2/4);
+    nvgLineTo(s->vg, viz_speed_x-135 - viz_speed_w/2, viz_rect.y + header_h2/4 + header_h2/4);
+    nvgLineTo(s->vg, viz_speed_x-135, viz_rect.y + header_h2/2 + header_h2/4);
     nvgClosePath(s->vg);
-    nvgFillColor(s->vg, nvgRGBA(255,230,70,(scene->blinker_blinkingrate<=100 && scene->blinker_blinkingrate>=50)?140:0));
+    nvgFillColor(s->vg, nvgRGBA(255,170,0,(scene->blinker_blinkingrate<=60 && scene->blinker_blinkingrate>=25)?140:0));
     nvgFill(s->vg);
 
     nvgBeginPath(s->vg);
-    nvgMoveTo(s->vg, viz_speed_x-290, viz_rect.y + header_h2/4);
-    nvgLineTo(s->vg, viz_speed_x-290 - viz_speed_w/2, viz_rect.y + header_h2/4 + header_h2/4);
-    nvgLineTo(s->vg, viz_speed_x-290, viz_rect.y + header_h2/2 + header_h2/4);
+    nvgMoveTo(s->vg, viz_speed_x-270, viz_rect.y + header_h2/4);
+    nvgLineTo(s->vg, viz_speed_x-270 - viz_speed_w/2, viz_rect.y + header_h2/4 + header_h2/4);
+    nvgLineTo(s->vg, viz_speed_x-270, viz_rect.y + header_h2/2 + header_h2/4);
     nvgClosePath(s->vg);
-    nvgFillColor(s->vg, nvgRGBA(255,230,70,(scene->blinker_blinkingrate<=80 && scene->blinker_blinkingrate>=50)?210:0));
+    nvgFillColor(s->vg, nvgRGBA(255,150,0,(scene->blinker_blinkingrate<=50 && scene->blinker_blinkingrate>=25)?210:0));
     nvgFill(s->vg);
   }
   if(scene->rightBlinker && !s->scene.comma_stock_ui) {
@@ -649,28 +649,28 @@ static void ui_draw_vision_speed(UIState *s) {
     nvgLineTo(s->vg, viz_speed_x+viz_speed_w + viz_speed_w/2, viz_rect.y + header_h2/4 + header_h2/4);
     nvgLineTo(s->vg, viz_speed_x+viz_speed_w, viz_rect.y + header_h2/2 + header_h2/4);
     nvgClosePath(s->vg);
-    nvgFillColor(s->vg, nvgRGBA(255,230,70,(scene->blinker_blinkingrate<=120 && scene->blinker_blinkingrate>=50)?70:0));
+    nvgFillColor(s->vg, nvgRGBA(255,190,0,(scene->blinker_blinkingrate<=70 && scene->blinker_blinkingrate>=25)?70:0));
     nvgFill(s->vg);
 
     nvgBeginPath(s->vg);
-    nvgMoveTo(s->vg, viz_speed_x+viz_speed_w+145, viz_rect.y + header_h2/4);
-    nvgLineTo(s->vg, viz_speed_x+viz_speed_w+145 + viz_speed_w/2, viz_rect.y + header_h2/4 + header_h2/4);
-    nvgLineTo(s->vg, viz_speed_x+viz_speed_w+145, viz_rect.y + header_h2/2 + header_h2/4);
+    nvgMoveTo(s->vg, viz_speed_x+viz_speed_w+135, viz_rect.y + header_h2/4);
+    nvgLineTo(s->vg, viz_speed_x+viz_speed_w+135 + viz_speed_w/2, viz_rect.y + header_h2/4 + header_h2/4);
+    nvgLineTo(s->vg, viz_speed_x+viz_speed_w+135, viz_rect.y + header_h2/2 + header_h2/4);
     nvgClosePath(s->vg);
-    nvgFillColor(s->vg, nvgRGBA(255,230,70,(scene->blinker_blinkingrate<=100 && scene->blinker_blinkingrate>=50)?140:0));
+    nvgFillColor(s->vg, nvgRGBA(255,170,0,(scene->blinker_blinkingrate<=60 && scene->blinker_blinkingrate>=25)?140:0));
     nvgFill(s->vg);
 
     nvgBeginPath(s->vg);
-    nvgMoveTo(s->vg, viz_speed_x+viz_speed_w+290, viz_rect.y + header_h2/4);
-    nvgLineTo(s->vg, viz_speed_x+viz_speed_w+290 + viz_speed_w/2, viz_rect.y + header_h2/4 + header_h2/4);
-    nvgLineTo(s->vg, viz_speed_x+viz_speed_w+290, viz_rect.y + header_h2/2 + header_h2/4);
+    nvgMoveTo(s->vg, viz_speed_x+viz_speed_w+270, viz_rect.y + header_h2/4);
+    nvgLineTo(s->vg, viz_speed_x+viz_speed_w+270 + viz_speed_w/2, viz_rect.y + header_h2/4 + header_h2/4);
+    nvgLineTo(s->vg, viz_speed_x+viz_speed_w+270, viz_rect.y + header_h2/2 + header_h2/4);
     nvgClosePath(s->vg);
-    nvgFillColor(s->vg, nvgRGBA(255,230,70,(scene->blinker_blinkingrate<=80 && scene->blinker_blinkingrate>=50)?210:0));
+    nvgFillColor(s->vg, nvgRGBA(255,150,0,(scene->blinker_blinkingrate<=50 && scene->blinker_blinkingrate>=25)?210:0));
     nvgFill(s->vg);
     }
   if(scene->leftBlinker || scene->rightBlinker) {
     s->scene.blinker_blinkingrate -= 5;
-    if(scene->blinker_blinkingrate<0) s->scene.blinker_blinkingrate = 120;
+    if(scene->blinker_blinkingrate<0) s->scene.blinker_blinkingrate = 70;
   }
 
   NVGcolor val_color = COLOR_WHITE;
