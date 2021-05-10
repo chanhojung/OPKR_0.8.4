@@ -274,7 +274,7 @@ class LateralPlanner():
     else:
       d_path_xyz = self.LP.get_d_path(v_ego, self.t_idxs, self.path_xyz)
       heading_cost = interp(v_ego, [0.0, 8.0, 12.0], [MPC_COST_LAT.HEADING*2., MPC_COST_LAT.HEADING, 0.0])
-      self.libmpc.set_weights(MPC_COST_LAT.PATH, heading_cost, self.steer_rate_cost
+      self.libmpc.set_weights(MPC_COST_LAT.PATH, heading_cost, self.steer_rate_cost)
       self.laneless_mode_status = False
       self.laneless_mode_status_buffer = False
 
