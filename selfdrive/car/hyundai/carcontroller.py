@@ -517,9 +517,9 @@ class CarController():
         aReqValue = CS.scc12["aReqValue"]
         if 0 < CS.out.radarDistance < 149:
           if aReqValue > 0.:
-            stock_weight = interp(CS.out.radarDistance, [3., 25.], [0.7, 0.])
+            stock_weight = interp(CS.out.radarDistance, [3., 25.], [0.3, 0.])
           else:
-            stock_weight = interp(CS.out.radarDistance, [3., 25.], [1., 0.])
+            stock_weight = interp(CS.out.radarDistance, [3., 25.], [1., -0.5])
           apply_accel = apply_accel * (1. - stock_weight) + aReqValue * stock_weight
         can_sends.append(create_scc11(self.packer, frame, enabled, set_speed, lead_visible, self.scc_live, lead_dist, lead_vrel, lead_yrel, CS.scc11))
         if CS.brake_check or CS.cancel_check:
