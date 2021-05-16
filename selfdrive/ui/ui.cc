@@ -132,9 +132,9 @@ static void update_model(UIState *s, const cereal::ModelDataV2::Reader &model) {
   if (scene.map_on_overlay) {
     update_line_data(s, model_position, 0.7, 1.22, &scene.track_vertices, max_idx);
   } else if (!scene.lateralPlan.lanelessModeStatus) {
-    update_line_data(s, model_position, 0.5, 1.22, &scene.track_vertices, max_idx);
+    update_line_data(s, model_position, 0.55, 1.22, &scene.track_vertices, max_idx);
   } else {
-    update_line_data(s, model_position, 0.3, 1.22, &scene.track_vertices, max_idx);
+    update_line_data(s, model_position, 0.25, 1.22, &scene.track_vertices, max_idx);
   }
 }
 
