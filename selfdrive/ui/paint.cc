@@ -1,7 +1,9 @@
+#include "paint.h"
+
 #include <assert.h>
+
 #include <algorithm>
 
-#include "ui.hpp"
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
 #define NANOVG_GL3_IMPLEMENTATION
@@ -12,23 +14,20 @@
 #define nvgCreate nvgCreateGLES3
 #endif
 
-#include "common/util.h"
-#include "common/timing.h"
-
 #define NANOVG_GLES3_IMPLEMENTATION
-#include "nanovg_gl.h"
-#include "nanovg_gl_utils.h"
-#include "paint.hpp"
+#include <nanovg_gl.h>
+#include <nanovg_gl_utils.h>
+
+#include "selfdrive/common/timing.h"
+#include "selfdrive/common/util.h"
+#include "selfdrive/hardware/hw.h"
+
+#include "selfdrive/ui/ui.h"
 
 // TODO: this is also hardcoded in common/transformations/camera.py
 // TODO: choose based on frame input size
-#ifdef QCOM2
-const float y_offset = 150.0;
-const float zoom = 2912.8;
-#else
-const float y_offset = 0.0;
-const float zoom = 2138.5;
-#endif
+const float y_offset = Hardware::TICI() ? 150.0 : 0.0;
+const float zoom = Hardware::TICI() ? 2912.8 : 2138.5;
 
 static void ui_print(UIState *s, int x, int y,  const char* fmt, ... )
 {
@@ -213,11 +212,11 @@ static void draw_frame(UIState *s) {
 
   if (s->last_frame) {
     glBindTexture(GL_TEXTURE_2D, s->texture[s->last_frame->idx]->frame_tex);
-#ifndef QCOM
-    // this is handled in ion on QCOM
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s->last_frame->width, s->last_frame->height,
-                 0, GL_RGB, GL_UNSIGNED_BYTE, s->last_frame->addr);
-#endif
+    if (!Hardware::EON()) {
+      // this is handled in ion on QCOM
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s->last_frame->width, s->last_frame->height,
+                   0, GL_RGB, GL_UNSIGNED_BYTE, s->last_frame->addr);
+    }
   }
 
   glUseProgram(s->gl_shader->prog);
@@ -542,9 +541,9 @@ static void ui_draw_vision_maxspeed_org(UIState *s) {
   nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE);
   if (cruise_speed >= 30 && s->scene.controls_state.getEnabled()) {
     const std::string cruise_speed_str = std::to_string((int)std::nearbyint(cruise_speed));
-    ui_draw_text(s, rect.centerX(), int(s->viz_rect.y + (bdr_s))+65, cruise_speed_str.c_str(), 26 * 2.4, COLOR_WHITE_ALPHA(is_cruise_set ? 200 : 100), "sans-bold");
+    ui_draw_text(s, rect.centerX(), int(s->viz_rect.y + (bdr_s))+65, cruise_speed_str.c_str(), 26 * 2.8, COLOR_WHITE_ALPHA(is_cruise_set ? 200 : 100), "sans-bold");
   } else {
-  	ui_draw_text(s, rect.centerX(), int(s->viz_rect.y + (bdr_s))+65, "-", 26 * 2.4, COLOR_WHITE_ALPHA(is_cruise_set ? 200 : 100), "sans-semibold");
+  	ui_draw_text(s, rect.centerX(), int(s->viz_rect.y + (bdr_s))+65, "-", 26 * 2.8, COLOR_WHITE_ALPHA(is_cruise_set ? 200 : 100), "sans-semibold");
   }
   if (is_cruise_set) {
     const std::string maxspeed_str = std::to_string((int)std::nearbyint(maxspeed));
@@ -751,13 +750,9 @@ static void ui_draw_driver_view(UIState *s) {
 
   // blackout
   const int blackout_x_r = valid_rect.right();
-#ifndef QCOM2
-  const int blackout_w_r = rect.right() - valid_rect.right();
-  const int blackout_x_l = rect.x;
-#else
-  const int blackout_w_r = s->viz_rect.right() - valid_rect.right();
-  const int blackout_x_l = s->viz_rect.x;
-#endif
+  const Rect &blackout_rect = Hardware::TICI() ? s->viz_rect : rect;
+  const int blackout_w_r = blackout_rect.right() - valid_rect.right();
+  const int blackout_x_l = blackout_rect.x;
   const int blackout_w_l = valid_rect.x - blackout_x_l;
   ui_fill_rect(s->vg, {blackout_x_l, rect.y, blackout_w_l, rect.h}, COLOR_BLACK_ALPHA(144));
   ui_fill_rect(s->vg, {blackout_x_r, rect.y, blackout_w_r, rect.h}, COLOR_BLACK_ALPHA(144));
@@ -1350,8 +1345,14 @@ static void ui_draw_vision(UIState *s) {
     }
     // Set Speed, Current Speed, Status/Events
     ui_draw_vision_header(s);
-    if (scene->alert_size == cereal::ControlsState::AlertSize::NONE) {
-      ui_draw_vision_footer(s);
+    if (s->scene.controls_state.getAlertSize() == cereal::ControlsState::AlertSize::NONE) {
+      ui_draw_vision_face(s);
+      // if (s->scene.model_long && !s->scene.comma_stock_ui) {
+      //   ui_draw_ml_button(s);
+      // }
+      if (!s->scene.comma_stock_ui) {
+        ui_draw_vision_car(s);
+      }
     }
   } else {
     ui_draw_driver_view(s);
@@ -1367,8 +1368,7 @@ static void ui_draw_background(UIState *s) {
 void ui_draw(UIState *s, int w, int h) {
   s->viz_rect = Rect{bdr_s, bdr_s, w - 2 * bdr_s, h - 2 * bdr_s};
 
-  const bool draw_alerts = s->scene.started;
-  const bool draw_vision = draw_alerts && s->vipc_client->connected;
+  const bool draw_vision = s->scene.started && s->vipc_client->connected;
 
   // GL drawing functions
   ui_draw_background(s);
@@ -1384,10 +1384,6 @@ void ui_draw(UIState *s, int w, int h) {
 
   if (draw_vision) {
     ui_draw_vision(s);
-  }
-
-  if (draw_alerts && s->scene.alert_size != cereal::ControlsState::AlertSize::NONE) {
-    ui_draw_vision_alert(s);
   }
 
   if (s->scene.driver_view && !s->vipc_client->connected) {
@@ -1497,41 +1493,42 @@ static const mat4 device_transform = {{
   0.0,  0.0, 0.0, 1.0,
 }};
 
-static const float driver_view_ratio = 1.333;
-#ifndef QCOM2
-// frame from 4/3 to 16/9 display
-static const mat4 driver_view_transform = {{
-  driver_view_ratio*(1080-2*bdr_s)/(1920-2*bdr_s),  0.0, 0.0, 0.0,
-  0.0,  1.0, 0.0, 0.0,
-  0.0,  0.0, 1.0, 0.0,
-  0.0,  0.0, 0.0, 1.0,
-}};
-#else
-// from dmonitoring.cc
-static const int full_width_tici = 1928;
-static const int full_height_tici = 1208;
-static const int adapt_width_tici = 668;
-static const int crop_x_offset = 32;
-static const int crop_y_offset = -196;
-static const float yscale = full_height_tici * driver_view_ratio / adapt_width_tici;
-static const float xscale = yscale*(1080-2*bdr_s)/(2160-2*bdr_s)*full_width_tici/full_height_tici;
-
-static const mat4 driver_view_transform = {{
-  xscale,  0.0, 0.0, xscale*crop_x_offset/full_width_tici*2,
-  0.0,  yscale, 0.0, yscale*crop_y_offset/full_height_tici*2,
-  0.0,  0.0, 1.0, 0.0,
-  0.0,  0.0, 0.0, 1.0,
-}};
-#endif
+static mat4 get_driver_view_transform() {
+  const float driver_view_ratio = 1.333;
+  mat4 transform;
+  if (Hardware::TICI()) {
+    // from dmonitoring.cc
+    const int full_width_tici = 1928;
+    const int full_height_tici = 1208;
+    const int adapt_width_tici = 668;
+    const int crop_x_offset = 32;
+    const int crop_y_offset = -196;
+    const float yscale = full_height_tici * driver_view_ratio / adapt_width_tici;
+    const float xscale = yscale*(1080-2*bdr_s)/(2160-2*bdr_s)*full_width_tici/full_height_tici;
+    transform = (mat4){{
+      xscale,  0.0, 0.0, xscale*crop_x_offset/full_width_tici*2,
+      0.0,  yscale, 0.0, yscale*crop_y_offset/full_height_tici*2,
+      0.0,  0.0, 1.0, 0.0,
+      0.0,  0.0, 0.0, 1.0,
+    }};
+  
+  } else {
+     // frame from 4/3 to 16/9 display
+    transform = (mat4){{
+      driver_view_ratio*(1080-2*bdr_s)/(1920-2*bdr_s),  0.0, 0.0, 0.0,
+      0.0,  1.0, 0.0, 0.0,
+      0.0,  0.0, 1.0, 0.0,
+      0.0,  0.0, 0.0, 1.0,
+    }};
+  }
+  return transform;
+}
 
 void ui_nvg_init(UIState *s) {
   // init drawing
-#ifdef QCOM
-  // on QCOM, we enable MSAA
-  s->vg = nvgCreate(0);
-#else
-  s->vg = nvgCreate(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
-#endif
+
+  // on EON, we enable MSAA
+  s->vg = Hardware::EON() ? nvgCreate(0) : nvgCreate(NVG_ANTIALIAS | NVG_STENCIL_STROKES | NVG_DEBUG);
   assert(s->vg);
 
   // init fonts
@@ -1641,7 +1638,7 @@ void ui_nvg_init(UIState *s) {
     0.0, 0.0, 0.0, 1.0,
   }};
 
-  s->front_frame_mat = matmul(device_transform, driver_view_transform);
+  s->front_frame_mat = matmul(device_transform, get_driver_view_transform());
   s->rear_frame_mat = matmul(device_transform, frame_transform);
 
   // Apply transformation such that video pixel coordinates match video

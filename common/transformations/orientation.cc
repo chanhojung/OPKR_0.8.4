@@ -31,7 +31,7 @@ Eigen::Vector3d quat2euler(Eigen::Quaterniond quat){
   // return {euler(2), euler(1), euler(0)};
   double gamma = atan2(2 * (quat.w() * quat.x() + quat.y() * quat.z()), 1 - 2 * (quat.x()*quat.x() + quat.y()*quat.y()));
   double asin_arg_clipped = std::clamp(2 * (quat.w() * quat.y() - quat.z() * quat.x()), -1.0, 1.0);
-  double theta = asin(asin_arg_clipped);  
+  double theta = asin(asin_arg_clipped);
   double psi = atan2(2 * (quat.w() * quat.z() + quat.x() * quat.y()), 1 - 2 * (quat.y()*quat.y() + quat.z()*quat.z()));
   return {gamma, theta, psi};
 }
