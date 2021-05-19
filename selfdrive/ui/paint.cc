@@ -1270,9 +1270,6 @@ static void ui_draw_vision_footer(UIState *s) {
   // if (s->scene.model_long && !s->scene.comma_stock_ui) {
   //   ui_draw_ml_button(s);
   // }
-  if (!s->scene.comma_stock_ui) {
-    ui_draw_vision_car(s);
-  }
   #if UI_FEATURE_BRAKE
     ui_draw_vision_brake(s);
   #endif  
