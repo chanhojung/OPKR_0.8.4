@@ -716,7 +716,7 @@ struct ModelDataV2 {
     brake3MetersPerSecondSquaredProbs @4 :List(Float32);
     brake4MetersPerSecondSquaredProbs @5 :List(Float32);
     brake5MetersPerSecondSquaredProbs @6 :List(Float32);
-    desireState @5 :List(Float32);
+    desireState @7 :List(Float32);
   }
 }
 
