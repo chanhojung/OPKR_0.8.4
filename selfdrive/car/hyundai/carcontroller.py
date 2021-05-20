@@ -177,12 +177,10 @@ class CarController():
     self.res_speed_timer = 0
 
     self.anglesteer_desire = 0.0
-    self.angle_range = [5, 30, 50]
-
-    self.model_speed_range = [30, 100, 255]
-    self.steerMax_range = [CarControllerParams.STEER_MAX, int(self.params.get("SteerMaxBaseAdj", encoding="utf8")), int(self.params.get("SteerMaxBaseAdj", encoding="utf8"))]
-    self.steerDeltaUp_range = [CarControllerParams.STEER_DELTA_UP, int(self.params.get("SteerDeltaUpBaseAdj", encoding="utf8")), int(self.params.get("SteerDeltaUpBaseAdj", encoding="utf8"))]
-    self.steerDeltaDown_range = [CarControllerParams.STEER_DELTA_DOWN, int(self.params.get("SteerDeltaDownBaseAdj", encoding="utf8")), int(self.params.get("SteerDeltaDownBaseAdj", encoding="utf8"))]
+    self.angle_range = [5, 50]
+    self.angle_steerMax_range = [int(self.params.get("SteerMaxBaseAdj", encoding="utf8")), CarControllerParams.STEER_MAX]
+    self.angle_steerDeltaUp_range = [int(self.params.get("SteerDeltaUpBaseAdj", encoding="utf8")), CarControllerParams.STEER_DELTA_UP]
+    self.angle_steerDeltaDown_range = [int(self.params.get("SteerDeltaDownBaseAdj", encoding="utf8")), CarControllerParams.STEER_DELTA_DOWN]
 
     self.steerMax = int(self.params.get("SteerMaxBaseAdj", encoding="utf8"))
     self.steerDeltaUp = int(self.params.get("SteerDeltaUpBaseAdj", encoding="utf8"))

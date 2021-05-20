@@ -184,15 +184,15 @@ static void ui_draw_track(UIState *s, const line_vertices_data &vd)
           green_lvl = 200;          
         }
         track_bg = nvgLinearGradient(s->vg, s->fb_w, s->fb_h, s->fb_w, s->fb_h*.4,
-          nvgRGBA(red_lvl, green_lvl, 0, 230), nvgRGBA(red_lvl, green_lvl, 0, 20));
+          nvgRGBA(red_lvl, green_lvl, 0, 250), nvgRGBA(red_lvl, green_lvl, 0, 50));
     } else { // differentiate laneless mode color (Grace blue)
       track_bg = nvgLinearGradient(s->vg, s->fb_w, s->fb_h, s->fb_w, s->fb_h * .4,
-          nvgRGBA(0, 100, 255, 230), nvgRGBA(0, 100, 255, 30));
+          nvgRGBA(0, 100, 255, 250), nvgRGBA(0, 100, 255, 50));
     }
   } else {
     // Draw white vision track
     track_bg = nvgLinearGradient(s->vg, s->fb_w, s->fb_h, s->fb_w, s->fb_h * .4,
-                                COLOR_WHITE_ALPHA(150), COLOR_WHITE_ALPHA(20));
+                                COLOR_WHITE_ALPHA(150), COLOR_WHITE_ALPHA(100));
   }
   
   nvgFillPaint(s->vg, track_bg);
@@ -1270,59 +1270,12 @@ static void ui_draw_vision_footer(UIState *s) {
   // if (s->scene.model_long && !s->scene.comma_stock_ui) {
   //   ui_draw_ml_button(s);
   // }
-  if (!s->scene.comma_stock_ui) {
-    ui_draw_vision_car(s);
-  }
   #if UI_FEATURE_BRAKE
     ui_draw_vision_brake(s);
   #endif  
   #if UI_FEATURE_AUTOHOLD
     ui_draw_vision_autohold(s);
   #endif
-}
-
-static float get_alert_alpha(float blink_rate) {
-  return 0.375 * cos((millis_since_boot() / 1000) * 2 * M_PI * blink_rate) + 0.625;
-}
-
-static void ui_draw_vision_alert(UIState *s) {
-  static std::map<cereal::ControlsState::AlertSize, const int> alert_size_map = {
-      {cereal::ControlsState::AlertSize::SMALL, 241},
-      {cereal::ControlsState::AlertSize::MID, 390},
-      {cereal::ControlsState::AlertSize::FULL, s->fb_h}};
-  const UIScene *scene = &s->scene;
-  bool longAlert1 = scene->alert_text1.length() > 15;
-
-  NVGcolor color = bg_colors[s->status];
-  color.a *= get_alert_alpha(scene->alert_blinking_rate);
-  const int alr_h = alert_size_map[scene->alert_size] + bdr_s;
-  const Rect rect = {.x = s->viz_rect.x - bdr_s,
-                     .y = s->fb_h - alr_h,
-                     .w = s->viz_rect.w + (bdr_s * 2),
-                     .h = alr_h};
-
-  ui_fill_rect(s->vg, rect, color);
-  ui_fill_rect(s->vg, rect, nvgLinearGradient(s->vg, rect.x, rect.y, rect.x, rect.bottom(),
-                                            nvgRGBAf(0.0, 0.0, 0.0, 0.05), nvgRGBAf(0.0, 0.0, 0.0, 0.35)));
-
-  nvgFillColor(s->vg, COLOR_WHITE);
-  nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE);
-
-  if (scene->alert_size == cereal::ControlsState::AlertSize::SMALL) {
-    ui_draw_text(s, rect.centerX(), rect.centerY() + 15, scene->alert_text1.c_str(), 40*2.5, COLOR_WHITE, "sans-semibold");
-  } else if (scene->alert_size == cereal::ControlsState::AlertSize::MID) {
-    ui_draw_text(s, rect.centerX(), rect.centerY() - 45, scene->alert_text1.c_str(), 48*2.5, COLOR_WHITE, "sans-bold");
-    ui_draw_text(s, rect.centerX(), rect.centerY() + 75, scene->alert_text2.c_str(), 36*2.5, COLOR_WHITE, "sans-regular");
-  } else if (scene->alert_size == cereal::ControlsState::AlertSize::FULL) {
-    nvgFontSize(s->vg, (longAlert1?72:96)*2.5);
-    nvgFontFace(s->vg, "sans-bold");
-    nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-    nvgTextBox(s->vg, rect.x, rect.y+(longAlert1?360:420), rect.w-60, scene->alert_text1.c_str(), NULL);
-    nvgFontSize(s->vg, 48*2.5);
-    nvgFontFace(s->vg,  "sans-regular");
-    nvgTextAlign(s->vg, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
-    nvgTextBox(s->vg, rect.x, rect.h-(longAlert1?300:360), rect.w-60, scene->alert_text2.c_str(), NULL);
-  }
 }
 
 static void ui_draw_vision_frame(UIState *s) {
@@ -1346,7 +1299,7 @@ static void ui_draw_vision(UIState *s) {
     // Set Speed, Current Speed, Status/Events
     ui_draw_vision_header(s);
     if (s->scene.controls_state.getAlertSize() == cereal::ControlsState::AlertSize::NONE) {
-      ui_draw_vision_face(s);
+      ui_draw_vision_footer(s);
       // if (s->scene.model_long && !s->scene.comma_stock_ui) {
       //   ui_draw_ml_button(s);
       // }
