@@ -699,13 +699,13 @@ struct ModelDataV2 {
   struct MetaData {
     engagedProb @0 :Float32;
     desirePrediction @1 :List(Float32);
-    disengagePredictions @6 :DisengagePredictions;
-    hardBrakePredicted @7 :Bool;
+    disengagePredictions @2 :DisengagePredictions;
+    hardBrakePredicted @3 :Bool;
 
     # deprecated
-    brakeDisengageProbDEPRECATED @2 :Float32;
-    gasDisengageProbDEPRECATED @3 :Float32;
-    steerOverrideProbDEPRECATED @4 :Float32;
+    brakeDisengageProbDEPRECATED @4 :Float32;
+    gasDisengageProbDEPRECATED @5 :Float32;
+    steerOverrideProbDEPRECATED @6 :Float32;
   }
 
   struct DisengagePredictions {
