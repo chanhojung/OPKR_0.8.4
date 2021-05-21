@@ -720,8 +720,8 @@ static void ui_draw_vision_event(UIState *s) {
     const int direction_x = compass_x + 74;
     const int direction_y = compass_y + 74;
     ui_draw_circle_image(s, direction_x, direction_y - (bdr_s+7), 100, "direction", nvgRGBA(0x0, 0x0, 0x0, 0x0), 0.9f, -(s->scene.bearingUblox));
-    ui_draw_image(s, {compass_x, compass_y, 150, 150}, "compass", 0.7f);
-  }
+    ui_draw_image(s, {compass_x, compass_y, 150, 150}, "compass", 1.0f);
+  }.0
 
   // draw steering wheel
   const int bg_wheel_size = 90;
