@@ -714,11 +714,11 @@ static void ui_draw_vision_event(UIState *s) {
   //draw compass by opkr
   if (s->scene.gpsAccuracyUblox != 0.00 && !s->scene.comma_stock_ui) {
     const int compass_x = s->viz_rect.x + s->viz_rect.w - 167 - (bdr_s);
-    const int compass_y = (s->viz_rect.y + (bdr_s)) + 713;
+    const int compass_y = (s->viz_rect.y + (bdr_s)) + 715;
     const int direction_x = compass_x + 74;
     const int direction_y = compass_y + 74;
-    ui_draw_image(s, {compass_x, compass_y, 150, 150}, "compass", 0.6f);
-    ui_draw_circle_image(s, direction_x, direction_y - (bdr_s+7), 90, "direction", nvgRGBA(0x0, 0x0, 0x0, 0x0), 0.6f, -(s->scene.bearingUblox));
+    ui_draw_circle_image(s, direction_x, direction_y - (bdr_s+7), 100, "direction", nvgRGBA(0x0, 0x0, 0x0, 0x0), 0.9f, -(s->scene.bearingUblox));
+    ui_draw_image(s, {compass_x, compass_y, 150, 150}, "compass", 0.7f);
   }
 
   // draw steering wheel

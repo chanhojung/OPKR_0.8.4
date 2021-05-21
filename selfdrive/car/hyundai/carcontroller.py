@@ -334,7 +334,7 @@ class CarController():
     if frame % 2 and CS.CP.mdpsBus: # send clu11 to mdps if it is not on bus 0
       can_sends.append(create_clu11(self.packer, frame, CS.clu11, Buttons.NONE, enabled_speed, CS.CP.mdpsBus))
 
-    str_log1 = 'CV={:03.0f}  AS={:03.1f}  TQ={:03.0f}  ST={:03.0f}/{:01.0f}/{:01.0f}  AQ={:0.2f}'.format(self.curve_speed, abs(self.anglesteer_desire), abs(new_steer), max(self.steerMax, abs(new_steer)), self.steerDeltaUp, self.steerDeltaDown, CS.scc12["aReqValue"])
+    str_log1 = 'CV={:03.0f}  AS={:03.1f}  TQ={:03.0f}  ST={:03.0f}/{:01.0f}/{:01.0f} AQ={:+04.2f}'.format(abs(self.curve_speed), abs(self.anglesteer_desire), abs(new_steer), max(self.steerMax, abs(new_steer)), self.steerDeltaUp, self.steerDeltaDown, CS.scc12["aReqValue"])
 
     try:
       if self.params.get_bool("OpkrLiveTune"):
@@ -515,13 +515,15 @@ class CarController():
           self.fca11inc += 4
         self.fca11alivecnt = self.fca11maxcnt - self.fca11inc
         aReqValue = CS.scc12["aReqValue"]
-        if 0 < CS.out.radarDistance < 149:
+        if 0 < CS.out.radarDistance <= 149:
           if aReqValue > 0.:
-            stock_weight = interp(CS.out.radarDistance, [3., 25.], [0.9, 0.])
-          else:
+            stock_weight = interp(CS.out.radarDistance, [3., 25.], [0.85, 0.])
+          elif aReqValue < 0.:
             stock_weight = interp(CS.out.radarDistance, [3., 25.], [1., 0.])
+          else:
+            stock_weight = 0.
           apply_accel = apply_accel * (1. - stock_weight) + aReqValue * stock_weight
-        can_sends.append(create_scc11(self.packer, frame, enabled, set_speed, lead_visible, self.scc_live, lead_dist, lead_vrel, lead_yrel, CS.scc11))
+        can_sends.append(create_scc11(self.packer, frame, set_speed, lead_visible, self.scc_live, lead_dist, lead_vrel, lead_yrel, CS.scc11))
         if CS.brake_check or CS.cancel_check:
           can_sends.append(create_scc12(self.packer, apply_accel, enabled, self.scc_live, CS.out.gasPressed, 1, CS.out.stockAeb, CS.scc12))
         else:
