@@ -55,7 +55,6 @@ private:
   bool calibrated = false;
 
   double car_speed = 0.0;
-  double last_reset_time = NAN;  
   std::deque<double> posenet_stds;
 
   std::unique_ptr<LocalCoord> converter;
