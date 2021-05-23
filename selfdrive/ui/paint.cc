@@ -582,7 +582,7 @@ static void ui_draw_vision_cruise_speed(UIState *s) {
 
   NVGcolor color = COLOR_GREY;
   if (s->scene.brakePress && !s->scene.comma_stock_ui ) {
-    color = COLOR_RED_ALPHA(200);  
+    color = nvgRGBA(183, 0, 0, 200);
   } else if (s->is_speed_over_limit) {
     color = COLOR_OCHRE_ALPHA(200);
   } else if (s->scene.limitSpeedCamera > 29 && !s->is_speed_over_limit) {
