@@ -344,9 +344,9 @@ static void update_status(UIState *s) {
     } else if (alert_status == cereal::ControlsState::AlertStatus::CRITICAL) {
       s->status = STATUS_ALERT;
     } else if (s->scene.brakePress) {
-      s->status = STATUS_BRAKE
+      s->status = STATUS_BRAKE;
     } else if (s->scene.cruiseAccStatus) {
-      s->status = STATUS_CRUISE
+      s->status = STATUS_CRUISE;
     } else {
       s->status = s->scene.controls_state.getEnabled() ? STATUS_ENGAGED : STATUS_DISENGAGED;
     }
